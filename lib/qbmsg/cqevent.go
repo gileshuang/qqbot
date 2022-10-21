@@ -1,6 +1,6 @@
 package qbmsg
 
-// https://docs.go-cqhttp.org/event/
+// doc: https://docs.go-cqhttp.org/event/
 
 type EventSender struct {
 	Card     string `json:"card"`

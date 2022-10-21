@@ -1,6 +1,6 @@
 package bili
 
-// https://github.com/SocialSisterYi/bilibili-API-collect
+// doc: https://github.com/SocialSisterYi/bilibili-API-collect
 
 import (
 	"errors"
@@ -109,6 +109,5 @@ func GetVideoInfo(bvid, avid string) (string, error) {
 		"分享数：" + jsoniter.Get(body, "data", "stat", "share").ToString() + "\n" +
 		"简介：" + jsoniter.Get(body, "data", "desc").ToString() + "\n" +
 		"[CQ:image,file=" + jsoniter.Get(body, "data", "pic").ToString() + "]\n"
-
 	return out, nil
 }

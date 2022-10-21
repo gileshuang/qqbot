@@ -54,7 +54,7 @@ func (slf *WsHandler) Read(msg []byte) {
 			slf.conn.SetReadDeadline(time.Now().Add(time.Millisecond * time.Duration(msgData.Interval+3000)))
 		}
 	} else if msgData.PortType == "message" {
-		// qblog.Log.Debug("msgData", msgData)
+		qblog.Log.Debug("msgData", msgData)
 		if msgData.MessageType == "group" {
 			// 群聊消息
 			qblog.Log.Debug("Get group message from", msgData.GroupId, ":", msgData.Message)

@@ -1,5 +1,7 @@
 package qbmsg
 
+// doc: https://docs.go-cqhttp.org/api/
+
 import (
 	"qqbot/lib/qblog"
 
