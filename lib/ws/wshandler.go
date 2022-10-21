@@ -33,6 +33,7 @@ func (slf *WsHandler) Run() {
 			return
 		case <-time.After(time.Second * 3):
 			// debuglog("wsHander running, RemoteAddr:", slf.conn.RemoteAddr())
+			// 执行一些自己的任务
 		}
 	}
 }

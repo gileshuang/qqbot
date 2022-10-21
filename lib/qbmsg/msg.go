@@ -21,6 +21,8 @@ func Private(msg *Event, conn *websocket.Conn) error {
 
 func Group(msg *Event, conn *websocket.Conn) error {
 	qqMiniApp(msg, conn)
+	qqStructMsg(msg, conn)
 	biliLink(msg, conn)
+	jdLink(msg, conn)
 	return nil
 }

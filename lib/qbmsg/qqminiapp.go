@@ -69,35 +69,53 @@ func qqMiniApp(msg *Event, conn *websocket.Conn) error {
 		// 未匹配到 CQ code json 数据段，不是小程序
 		return nil
 	}
+	qblog.Log.Info("收到了 CQ json 数据")
+	jsonData := cqcode.UnescapeValue(jsonDatas[1])
+	qblog.Log.Debug("jsonData", jsonData)
+	data := new(miniApp)
+	json.Unmarshal([]byte(jsonData), &data)
+	if data.App != "com.tencent.miniapp_01" {
+		// 不是QQ小程序，直接退出
+		return nil
+	}
 	qblog.Log.Info("收到了QQ小程序")
+	// 构建要发送消息的结构体
 	apiReq := API{}
-	jsonDatas = jsonDatas[1:]
-	qblog.Log.Debug("jsonDatas", jsonDatas)
-	for _, jsonData := range jsonDatas {
-		data := new(miniApp)
-		jsonData = cqcode.UnescapeValue(jsonData)
-		json.Unmarshal([]byte(jsonData), &data)
-		// 判断是不是 B 站小程序
-		if data.Meta.Detail1.Appid == "1109937557" {
-			qqDocUrl := data.Meta.Detail1.Qqdocurl
-			qblog.Log.Debug("qqdocurl:", qqDocUrl)
-			bv, err := bili.B23ToBvid(qqDocUrl)
-			if err != nil {
-				continue
-			}
-			qblog.Log.Debug("获取到BV链接:", bv)
-			out, err := bili.GetVideoInfo(bv, "")
-			if err != nil {
-				return err
-			}
-			apiReq.Action = "send_group_msg"
-			apiReq.Params.GroupId = msg.GroupId
-			apiReq.Params.Message = out
-			apiReq.Params.AutoEscape = false
-			err = apiReq.Send(conn)
-			if err != nil {
-				return err
-			}
+	apiReq.Params.AutoEscape = false
+	if msg.MessageType == "group" {
+		apiReq.Action = "send_group_msg"
+		apiReq.Params.GroupId = msg.GroupId
+	} else if msg.MessageType == "private" {
+		apiReq.Action = "send_private_msg"
+		apiReq.Params.GroupId = msg.UserId
+	}
+	// 判断小程序类型
+	if data.Meta.Detail1.Appid == "1109937557" {
+		// B 站小程序
+		qqDocUrl := data.Meta.Detail1.Qqdocurl
+		qblog.Log.Debug("qqdocurl:", qqDocUrl)
+		bv, err := bili.B23ToBvid(qqDocUrl)
+		if err != nil {
+			return nil
+		}
+		qblog.Log.Debug("获取到BV链接:", bv)
+		apiReq.Params.Message, err = bili.GetVideoInfo(bv, "")
+		if err != nil {
+			return err
+		}
+		err = apiReq.Send(conn)
+		if err != nil {
+			return err
+		}
+	}
+	if data.Meta.Detail1.Appid == "1108735743" {
+		// 快手小程序
+		apiReq.Params.Message = data.Meta.Detail1.Qqdocurl + "\n" +
+			data.Meta.Detail1.Desc + "\n" +
+			"[CQ:image,file=" + data.Meta.Detail1.Preview + "]\n"
+		err := apiReq.Send(conn)
+		if err != nil {
+			return err
 		}
 	}
 	return nil

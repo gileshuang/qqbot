@@ -93,10 +93,6 @@ func GetVideoInfo(bvid, avid string) (string, error) {
 	if err != nil {
 		return "", errors.New("read from bilibili api failed")
 	}
-	vBvid := jsoniter.Get(body, "data", "bvid")
-	vDesc := jsoniter.Get(body, "data", "desc")
-	qblog.Log.Debug("bvid:", vBvid)
-	qblog.Log.Debug("desc:", vDesc)
 	out := "https://www.bilibili.com/video/" + jsoniter.Get(body, "data", "bvid").ToString() + "\n" +
 		"标题：" + jsoniter.Get(body, "data", "title").ToString() + "\n" +
 		"up主：" + jsoniter.Get(body, "data", "owner", "name").ToString() + "\n" +

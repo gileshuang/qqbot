@@ -13,6 +13,14 @@ func biliLink(msg *Event, conn *websocket.Conn) error {
 	var err error
 	strMsg := msg.Message
 	apiReq := API{}
+	apiReq.Params.AutoEscape = false
+	if msg.MessageType == "group" {
+		apiReq.Action = "send_group_msg"
+		apiReq.Params.GroupId = msg.GroupId
+	} else if msg.MessageType == "private" {
+		apiReq.Action = "send_private_msg"
+		apiReq.Params.GroupId = msg.UserId
+	}
 	// b23.tv
 	re := regexp.MustCompile(`b23\.tv\/([0-9a-zA-Z]+)`)
 	linkids := re.FindStringSubmatch(strMsg)
@@ -29,9 +37,6 @@ func biliLink(msg *Event, conn *websocket.Conn) error {
 			if err != nil {
 				continue
 			}
-			apiReq.Action = "send_group_msg"
-			apiReq.Params.GroupId = msg.GroupId
-			apiReq.Params.AutoEscape = false
 			err = apiReq.Send(conn)
 			if err != nil {
 				continue
@@ -51,9 +56,6 @@ func biliLink(msg *Event, conn *websocket.Conn) error {
 			if err != nil {
 				continue
 			}
-			apiReq.Action = "send_group_msg"
-			apiReq.Params.GroupId = msg.GroupId
-			apiReq.Params.AutoEscape = false
 			err = apiReq.Send(conn)
 			if err != nil {
 				continue
@@ -73,9 +75,6 @@ func biliLink(msg *Event, conn *websocket.Conn) error {
 			if err != nil {
 				continue
 			}
-			apiReq.Action = "send_group_msg"
-			apiReq.Params.GroupId = msg.GroupId
-			apiReq.Params.AutoEscape = false
 			err = apiReq.Send(conn)
 			if err != nil {
 				continue

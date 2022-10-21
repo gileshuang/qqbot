@@ -7,11 +7,16 @@ var (
 )
 
 type QBLog struct {
-	qbDebug bool
+	qbDebug  bool
+	logLevel int
 }
 
 func (slf *QBLog) SetDebug(b bool) {
 	slf.qbDebug = b
+}
+
+func (slf *QBLog) SetLevel(l int) {
+	slf.logLevel = l
 }
 
 func (slf *QBLog) Debug(a ...interface{}) {
