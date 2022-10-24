@@ -2,6 +2,7 @@ package jd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func GetItemInfo(id string) (string, error) {
-	jdUrl := "https://cd.jd.com/recommend?methods=accessories&cat=670%2C671%2C672&sku=" + id
+	jdUrl := "https://www.bijiago.com/bjg/api/dplist?dpids=" + id + "-3"
 	resp, err := http.Get(jdUrl)
 	if err != nil {
 		return "", errors.New("request jq api failed")
@@ -19,11 +20,15 @@ func GetItemInfo(id string) (string, error) {
 	if err != nil {
 		return "", errors.New("get item info from jd failed")
 	}
-	out := "https://item.jd.com/" + id + ".html\n" +
-		jsoniter.Get(body, "accessories", "data", "wName").ToString() + "\n" +
-		"品牌：" + jsoniter.Get(body, "accessories", "data", "chBrand").ToString() + "\n" +
-		"型号：" + jsoniter.Get(body, "accessories", "data", "model").ToString() + "\n" +
-		"价格（不含优惠）：" + jsoniter.Get(body, "accessories", "data", "wMaprice").ToString() + "\n" +
-		"[CQ:image,file=https://img12.360buyimg.com/n1/s450x450_" + jsoniter.Get(body, "accessories", "data", "imageUrl").ToString() + "]\n"
+	out := ""
+	for i := 0; i < jsoniter.Get(body).Size(); i++ {
+		var price float32 = jsoniter.Get(body, 0, "price").ToFloat32() / 100
+		out = out + jsoniter.Get(body, 0, "url").ToString() + "\n" +
+			jsoniter.Get(body, 0, "title").ToString() + "\n" +
+			"电商：" + jsoniter.Get(body, 0, "e_site_name").ToString() + "\n" +
+			"店铺：" + jsoniter.Get(body, 0, "site_name").ToString() + "\n" +
+			"价格（不含优惠）：" + fmt.Sprint(price) + "\n" +
+			"[CQ:image,file=" + jsoniter.Get(body, 0, "img").ToString() + "]\n"
+	}
 	return out, nil
 }
