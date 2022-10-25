@@ -26,10 +26,16 @@ func (slf *WsHandler) Close() {
 }
 
 func (slf *WsHandler) Run() {
+	var (
+		stopBlive chan bool = make(chan bool)
+	)
 	qblog.Log.Debug("Run a new WsHandler.")
+	go qbmsg.BliveMonitor(stopBlive, slf.conn)
 	for {
+		// 多个 case 只会执行第一个触发的 case
 		select {
 		case <-slf.stopCh:
+			stopBlive <- true
 			return
 		case <-time.After(time.Second * 3):
 			// debuglog("wsHander running, RemoteAddr:", slf.conn.RemoteAddr())
