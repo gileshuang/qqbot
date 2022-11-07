@@ -143,6 +143,7 @@ func BliveCheckStatus(conn *websocket.Conn) {
 		time.After(time.Second * 1)
 		out, err := bili.LiveStatus(ri)
 		if err != nil {
+			// 报错或者直播状态无变化
 			continue
 		}
 		for _, gid := range roomSuber[ri] {
