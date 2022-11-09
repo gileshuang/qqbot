@@ -102,11 +102,9 @@ func BliveMonitor(stopBlive chan bool, conn *websocket.Conn) {
 
 func BliveCheckStatus(conn *websocket.Conn) {
 	var (
-		json      = jsoniter.ConfigCompatibleWithStandardLibrary
-		bliveData string
+		json                           = jsoniter.ConfigCompatibleWithStandardLibrary
 		roomSuber map[string]([]int64) = make(map[string][]int64)
 	)
-	qblog.Log.Debug("Start BliveCheckStatus")
 	qbsql.InitDB()
 	sqlquery := "SELECT id,blive FROM channel WHERE blive != 'NULL' AND blive != '{}'"
 	rows, err := qbsql.Db.Query(sqlquery)
@@ -114,7 +112,11 @@ func BliveCheckStatus(conn *websocket.Conn) {
 		qblog.Log.Error("mysql query error:", err, "; SQL:", sqlquery)
 	}
 	for rows.Next() {
-		var groupId int64
+		var (
+			groupId   int64
+			bliveData string
+		)
+		// 每一个 row 是一个QQ群
 		rows.Scan(&groupId, &bliveData)
 		// qblog.Log.Debug(groupId, bliveData)
 		if bliveData == "" || bliveData == "{}" {
@@ -126,13 +128,11 @@ func BliveCheckStatus(conn *websocket.Conn) {
 			// 记录该直播间被哪些群订阅了
 			roomSuber[ri] = append(roomSuber[ri], groupId)
 			// 把本群的 roomData 信息写入全部订阅直播间列表
-			if _, ok := bili.NotifyStat[ri]; ok {
-				rd.LiveStatus = bili.NotifyStat[ri].LiveStatus
+			if _, ok := bili.NotifyStat[ri]; !ok {
+				bili.NotifyStat[ri] = rd
 			}
-			bili.NotifyStat[ri] = rd
 		}
 	}
-	qblog.Log.Debug("当前各群订阅的直播间有：", roomSuber)
 	// 准备 cq API
 	apiReq := API{}
 	apiReq.Params.AutoEscape = false
