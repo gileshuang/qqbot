@@ -153,12 +153,6 @@ func BliveCheckStatus(conn *websocket.Conn) {
 			if err != nil {
 				continue
 			}
-			// 整活，可删除
-			apiReq.Params.Message = "这个主播不会真的觉得有人看吧，不会吧不会吧"
-			err = apiReq.Send(conn)
-			if err != nil {
-				continue
-			}
 		}
 	}
 }

@@ -125,12 +125,12 @@ func LiveStatus(roomId string) (string, error) {
 		last_room_data.AreaName = jsoniter.Get(body, "data", "area_name").ToString()
 		last_room_data.Keyframe = jsoniter.Get(body, "data", "keyframe").ToString()
 		// 拼装输出信息
-		out = "https://live.bilibili.com/" + strconv.FormatInt(last_room_data.RoomId, 10) + "\n" +
+		out = last_room_data.UserName + " 的直播已开始，但他似乎真的以为有人会看。\n" +
+			"https://live.bilibili.com/" + strconv.FormatInt(last_room_data.RoomId, 10) + "\n" +
 			last_room_data.Title + "\n" +
-			"分区：" + last_room_data.AreaName + " - " + last_room_data.AreaName + "\n" +
-			"主播：" + last_room_data.UserName + "\n" +
+			"分区：" + last_room_data.ParentAreaName + " - " + last_room_data.AreaName + "\n" +
 			"粉丝数：" + strconv.FormatInt(last_room_data.AttentionBefore, 10) + " | " +
-			"观看人数：" + strconv.FormatInt(last_room_data.Online, 10) + "\n" +
+			"当前观看人数：" + strconv.FormatInt(last_room_data.Online, 10) + "\n" +
 			"当前直播画面：\n" +
 			"[CQ:image,file=" + last_room_data.Keyframe + "]\n"
 		last_room_data.LiveStatus = live_status
