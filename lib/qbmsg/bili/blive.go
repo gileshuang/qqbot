@@ -154,10 +154,10 @@ func LiveStatus(roomId string) (string, error) {
 	} else {
 		// 直播状态没变化，不需要通知，仅更新状态
 		last_room_data.LiveStatus = live_status
-		NotifyStat[roomId] = last_room_data
+		// NotifyStat[roomId] = last_room_data
 		return "", errors.New("live status not changed")
 	}
-	NotifyStat[roomId] = last_room_data
+	// NotifyStat[roomId] = last_room_data
 
 	return out, nil
 }

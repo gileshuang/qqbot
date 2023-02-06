@@ -63,7 +63,7 @@ type miniAppConfig struct {
 func qqMiniApp(msg *Event, conn *websocket.Conn) error {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	strMsg := msg.Message
-	re := regexp.MustCompile(`.+\[CQ:json,data=(.+)\]$`)
+	re := regexp.MustCompile(`.*\[CQ:json,data=(.+)\]$`)
 	jsonDatas := re.FindStringSubmatch(strMsg)
 	if jsonDatas == nil || len(jsonDatas) < 2 {
 		// 未匹配到 CQ code json 数据段，不是小程序
