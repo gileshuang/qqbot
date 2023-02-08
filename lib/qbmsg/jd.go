@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func jdLink(msg *Event, conn *websocket.Conn) error {
+func jdLink(msg *Event, conn *websocket.Conn) (error, bool) {
 	var err error
 	strMsg := msg.Message
 	apiReq := API{}
@@ -23,16 +23,16 @@ func jdLink(msg *Event, conn *websocket.Conn) error {
 	re := regexp.MustCompile(`jd\.com.*\/([0-9]+).htm.*`)
 	linkids := re.FindStringSubmatch(strMsg)
 	if len(linkids) < 1 {
-		return nil
+		return nil, false
 	}
 	linkid := linkids[1]
 	apiReq.Params.Message, err = jd.GetItemInfo(linkid)
 	if err != nil {
-		return err
+		return err, true
 	}
 	err = apiReq.Send(conn)
 	if err != nil {
-		return err
+		return err, true
 	}
-	return nil
+	return nil, true
 }

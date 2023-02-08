@@ -12,7 +12,7 @@ import (
 )
 
 // biliLink parse bilibili link to video info
-func biliLink(msg *Event, conn *websocket.Conn) error {
+func biliLink(msg *Event, conn *websocket.Conn) (error, bool) {
 	var err error
 	strMsg := msg.Message
 	apiReq := API{}
@@ -45,7 +45,7 @@ func biliLink(msg *Event, conn *websocket.Conn) error {
 				continue
 			}
 		}
-		return nil
+		return nil, true
 	}
 	// bvid
 	re = regexp.MustCompile(`(BV[0-9a-zA-Z]+)`)
@@ -64,7 +64,7 @@ func biliLink(msg *Event, conn *websocket.Conn) error {
 				continue
 			}
 		}
-		return nil
+		return nil, true
 	}
 	// aid
 	re = regexp.MustCompile(`av([0-9]+)`)
@@ -83,9 +83,9 @@ func biliLink(msg *Event, conn *websocket.Conn) error {
 				continue
 			}
 		}
-		return nil
+		return nil, true
 	}
-	return nil
+	return nil, false
 }
 
 func BliveMonitor(stopBlive chan bool, conn *websocket.Conn) {

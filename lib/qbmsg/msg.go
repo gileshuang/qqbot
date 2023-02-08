@@ -20,8 +20,20 @@ func Private(msg *Event, conn *websocket.Conn) error {
 }
 
 func Group(msg *Event, conn *websocket.Conn) error {
-	qqMiniApp(msg, conn)
-	qqStructMsg(msg, conn)
+	// error: return error info
+	// bool: return if msg type matched
+	var (
+		err     error
+		matched bool
+	)
+	err, matched = qqMiniApp(msg, conn)
+	if err == nil && matched {
+		return nil
+	}
+	err, matched = qqStructMsg(msg, conn)
+	if err == nil && matched {
+		return nil
+	}
 	biliLink(msg, conn)
 	jdLink(msg, conn)
 	return nil

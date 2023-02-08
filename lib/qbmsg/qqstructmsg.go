@@ -43,14 +43,14 @@ type structMsgConfig struct {
 	Type    string `json:"type"`
 }
 
-func qqStructMsg(msg *Event, conn *websocket.Conn) error {
+func qqStructMsg(msg *Event, conn *websocket.Conn) (error, bool) {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	strMsg := msg.Message
 	re := regexp.MustCompile(`.+\[CQ:json,data=(.+)\]$`)
 	jsonDatas := re.FindStringSubmatch(strMsg)
 	if jsonDatas == nil || len(jsonDatas) < 2 {
 		// 未匹配到 CQ code json 数据段，不是结构化消息
-		return nil
+		return nil, false
 	}
 	qblog.Log.Info("收到了 CQ json 数据")
 	jsonData := cqcode.UnescapeValue(jsonDatas[1])
@@ -59,7 +59,7 @@ func qqStructMsg(msg *Event, conn *websocket.Conn) error {
 	json.Unmarshal([]byte(jsonData), &data)
 	if data.App != "com.tencent.structmsg" {
 		// 不是结构化消息，直接退出
-		return nil
+		return nil, false
 	}
 	qblog.Log.Info("收到了结构化消息")
 	// 构建要发送消息的结构体
@@ -82,8 +82,10 @@ func qqStructMsg(msg *Event, conn *websocket.Conn) error {
 			"[CQ:image,file=" + data.Meta.News.Preview + "]\n"
 		err := apiReq.Send(conn)
 		if err != nil {
-			return err
+			return err, true
 		}
+		return nil, true
 	}
-	return nil
+	// 不是已知的结构化消息类型
+	return nil, false
 }

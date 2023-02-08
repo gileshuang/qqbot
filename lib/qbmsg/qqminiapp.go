@@ -60,14 +60,14 @@ type miniAppConfig struct {
 	Width    int    `json:"width"`
 }
 
-func qqMiniApp(msg *Event, conn *websocket.Conn) error {
+func qqMiniApp(msg *Event, conn *websocket.Conn) (error, bool) {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	strMsg := msg.Message
 	re := regexp.MustCompile(`.*\[CQ:json,data=(.+)\]$`)
 	jsonDatas := re.FindStringSubmatch(strMsg)
 	if jsonDatas == nil || len(jsonDatas) < 2 {
 		// 未匹配到 CQ code json 数据段，不是小程序
-		return nil
+		return nil, false
 	}
 	qblog.Log.Info("收到了 CQ json 数据")
 	jsonData := cqcode.UnescapeValue(jsonDatas[1])
@@ -76,7 +76,7 @@ func qqMiniApp(msg *Event, conn *websocket.Conn) error {
 	json.Unmarshal([]byte(jsonData), &data)
 	if data.App != "com.tencent.miniapp_01" {
 		// 不是QQ小程序，直接退出
-		return nil
+		return nil, false
 	}
 	qblog.Log.Info("收到了QQ小程序")
 	// 构建要发送消息的结构体
@@ -96,17 +96,18 @@ func qqMiniApp(msg *Event, conn *websocket.Conn) error {
 		qblog.Log.Debug("qqdocurl:", qqDocUrl)
 		bv, err := bili.B23ToBvid(qqDocUrl)
 		if err != nil {
-			return nil
+			return nil, true
 		}
 		qblog.Log.Debug("获取到BV链接:", bv)
 		apiReq.Params.Message, err = bili.GetVideoInfo(bv, "")
 		if err != nil {
-			return err
+			return err, true
 		}
 		err = apiReq.Send(conn)
 		if err != nil {
-			return err
+			return err, true
 		}
+		return nil, true
 	}
 	if data.Meta.Detail1.Appid == "1108735743" {
 		// 快手小程序
@@ -115,8 +116,10 @@ func qqMiniApp(msg *Event, conn *websocket.Conn) error {
 			"[CQ:image,file=" + data.Meta.Detail1.Preview + "]\n"
 		err := apiReq.Send(conn)
 		if err != nil {
-			return err
+			return err, true
 		}
+		return nil, true
 	}
-	return nil
+	// 不是已知的小程序类型
+	return nil, false
 }
