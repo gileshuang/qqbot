@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -59,7 +60,7 @@ type RoomData struct {
 
 func getBliveUsernameByUID(uid int64) (string, error) {
 	var (
-		biliStatAPI = "http://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids"
+		biliStatAPI = "https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids"
 	)
 	// 通过另一个接口获取主播用户名
 	uid_s := strconv.FormatInt(uid, 10)
@@ -78,6 +79,30 @@ func getBliveUsernameByUID(uid int64) (string, error) {
 	}
 
 	return username, nil
+}
+
+func getBliveLockedStatusByRoomID(roomId string) (bool, string) {
+	var (
+		biliLockAPI = "https://api.live.bilibili.com/room/v1/Room/room_init"
+		err         error
+		time_layout = "2006-01-02 15:04:05 MST"
+		cstZone     = time.FixedZone("CST", 8*3600)
+	)
+	// 获取直播间的封禁状态
+	resp, err := http.Get(biliLockAPI + "id=" + roomId)
+	if err != nil {
+		return false, ""
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, ""
+	}
+	is_locked := jsoniter.Get(body, "data", "is_locked").ToBool()
+	lock_till := jsoniter.Get(body, "data", "is_locked").ToInt64()
+	t_lock_till := time.Unix(lock_till, 0)
+
+	return is_locked, t_lock_till.In(cstZone).Format(time_layout)
 }
 
 func LiveStatus(roomId string) (string, error) {
@@ -109,7 +134,6 @@ func LiveStatus(roomId string) (string, error) {
 	// 更新内存中的直播间信息
 	last_room_data.RoomId = jsoniter.Get(body, "data", "room_id").ToInt64()
 	last_room_data.UID = jsoniter.Get(body, "data", "uid").ToInt64()
-	last_room_data.UserName, _ = getBliveUsernameByUID(last_room_data.UID)
 	last_room_data.Attention = jsoniter.Get(body, "data", "attention").ToInt64()
 	last_room_data.Online = jsoniter.Get(body, "data", "online").ToInt64()
 	if last_room_data.OnlineMax < last_room_data.Online {
@@ -121,6 +145,7 @@ func LiveStatus(roomId string) (string, error) {
 		// 直播已开始
 		last_room_data.AttentionBefore = last_room_data.Attention
 		last_room_data.Title = jsoniter.Get(body, "data", "title").ToString()
+		last_room_data.UserName, _ = getBliveUsernameByUID(last_room_data.UID)
 		last_room_data.ParentAreaName = jsoniter.Get(body, "data", "parent_area_name").ToString()
 		last_room_data.AreaName = jsoniter.Get(body, "data", "area_name").ToString()
 		last_room_data.Keyframe = jsoniter.Get(body, "data", "keyframe").ToString()
@@ -139,12 +164,22 @@ func LiveStatus(roomId string) (string, error) {
 		attention_new := last_room_data.Attention - last_room_data.AttentionBefore
 		last_room_data.UserCover = jsoniter.Get(body, "data", "user_cover").ToString()
 		// 拼装输出信息
-		out = last_room_data.UserName + " 的直播已结束。\n" +
-			"当前粉丝数：" + strconv.FormatInt(last_room_data.Attention, 10) + " | " +
-			"新增粉丝数：" + strconv.FormatInt(attention_new, 10) + "\n" +
-			"当前观看人数：" + strconv.FormatInt(last_room_data.Online, 10) + " | " +
-			"最高观看人数：" + strconv.FormatInt(last_room_data.OnlineMax, 10) + "\n" +
-			"[CQ:image,file=" + last_room_data.UserCover + "]\n"
+		is_locked, s_lock_till := getBliveLockedStatusByRoomID(roomId)
+		if !is_locked {
+			out = last_room_data.UserName + " 的直播已结束。\n" +
+				"当前粉丝数：" + strconv.FormatInt(last_room_data.Attention, 10) + " | " +
+				"新增粉丝数：" + strconv.FormatInt(attention_new, 10) + "\n" +
+				"当前观看人数：" + strconv.FormatInt(last_room_data.Online, 10) + " | " +
+				"最高观看人数：" + strconv.FormatInt(last_room_data.OnlineMax, 10) + "\n" +
+				"[CQ:image,file=" + last_room_data.UserCover + "]\n"
+		} else {
+			out = last_room_data.UserName + " 的直播间被封禁啦哈哈哈哈哈嗝~~~\n" +
+				"当前粉丝数：" + strconv.FormatInt(last_room_data.Attention, 10) + " | " +
+				"新增粉丝数：" + strconv.FormatInt(attention_new, 10) + "\n" +
+				"最高观看人数：" + strconv.FormatInt(last_room_data.OnlineMax, 10) + "\n" +
+				"解封时间：" + s_lock_till + "\n" +
+				"[CQ:image,file=" + last_room_data.UserCover + "]\n"
+		}
 		if live_status == 2 {
 			out = out + "主播开启了视频轮播：\n" +
 				"https://live.bilibili.com/" + strconv.FormatInt(last_room_data.RoomId, 10) + "\n"
@@ -153,6 +188,7 @@ func LiveStatus(roomId string) (string, error) {
 		last_room_data.OnlineMax = 0 // 重置最高观看人数计数
 	} else {
 		// 直播状态没变化，不需要通知，仅更新状态
+		last_room_data.UserName, _ = getBliveUsernameByUID(last_room_data.UID)
 		last_room_data.LiveStatus = live_status
 		// NotifyStat[roomId] = last_room_data
 		return "", errors.New("live status not changed")
