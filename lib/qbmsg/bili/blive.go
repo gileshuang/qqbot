@@ -89,7 +89,7 @@ func getBliveLockedStatusByRoomID(roomId string) (bool, string) {
 		cstZone     = time.FixedZone("CST", 8*3600)
 	)
 	// 获取直播间的封禁状态
-	resp, err := http.Get(biliLockAPI + "id=" + roomId)
+	resp, err := http.Get(biliLockAPI + "?id=" + roomId)
 	if err != nil {
 		return false, ""
 	}
