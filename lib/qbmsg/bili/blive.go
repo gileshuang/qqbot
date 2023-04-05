@@ -156,7 +156,7 @@ func LiveStatus(roomId string) (string, error) {
 			"分区：" + last_room_data.ParentAreaName + " - " + last_room_data.AreaName + "\n" +
 			"粉丝数：" + strconv.FormatInt(last_room_data.AttentionBefore, 10) + " | " +
 			"当前观看人数：" + strconv.FormatInt(last_room_data.Online, 10) + "\n" +
-			"当前直播画面：\n" +
+			"此前开播预览画面：\n" +
 			"[CQ:image,file=" + last_room_data.Keyframe + "]\n"
 		last_room_data.LiveStatus = live_status
 	} else if last_room_data.LiveStatus == 1 && live_status != 1 {
