@@ -99,7 +99,7 @@ func getBliveLockedStatusByRoomID(roomId string) (bool, string) {
 		return false, ""
 	}
 	is_locked := jsoniter.Get(body, "data", "is_locked").ToBool()
-	lock_till := jsoniter.Get(body, "data", "is_locked").ToInt64()
+	lock_till := jsoniter.Get(body, "data", "lock_till").ToInt64()
 	t_lock_till := time.Unix(lock_till, 0)
 
 	return is_locked, t_lock_till.In(cstZone).Format(time_layout)
