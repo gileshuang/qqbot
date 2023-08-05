@@ -5,6 +5,7 @@ import (
 	"qqbot/lib/qblog"
 	"qqbot/lib/qbmsg/bili"
 	"regexp"
+	"strings"
 
 	"github.com/gorilla/websocket"
 	jsoniter "github.com/json-iterator/go"
@@ -64,7 +65,7 @@ func qqMiniApp(msg *Event, conn *websocket.Conn) (error, bool) {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	strMsg := msg.Message
 	re := regexp.MustCompile(`.*\[CQ:json,data=(.+)\]$`)
-	jsonDatas := re.FindStringSubmatch(strMsg)
+	jsonDatas := re.FindStringSubmatch(strings.Replace(strMsg, "\n", "", -1))
 	if jsonDatas == nil || len(jsonDatas) < 2 {
 		// 未匹配到 CQ code json 数据段，不是小程序
 		return nil, false
