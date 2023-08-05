@@ -112,7 +112,15 @@ func qqMiniApp(msg *Event, conn *websocket.Conn) (error, bool) {
 	}
 	if data.Meta.Detail1.Appid == "1108735743" {
 		// 快手小程序
-		apiReq.Params.Message = data.Meta.Detail1.Qqdocurl + "\n" +
+		ksUrl := ""
+		if data.Meta.Detail1.Qqdocurl != "" {
+			ksUrl = data.Meta.Detail1.Qqdocurl
+		} else if data.Meta.Detail1.URL != "" {
+			ksUrl = data.Meta.Detail1.URL
+		} else {
+			ksUrl = "【快手又改小程序结构导致读不到链接啦】"
+		}
+		apiReq.Params.Message = ksUrl + "\n" +
 			data.Meta.Detail1.Desc + "\n" +
 			"[CQ:image,file=" + data.Meta.Detail1.Preview + "]\n"
 		err := apiReq.Send(conn)
