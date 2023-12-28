@@ -35,6 +35,7 @@ func Group(msg *Event, conn *websocket.Conn) error {
 		return nil
 	}
 	biliLink(msg, conn)
-	jdLink(msg, conn)
+	// 因比价宝接口异常，暂时不解析京东商品详情
+	// jdLink(msg, conn)
 	return nil
 }
